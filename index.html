@@ -1,40 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Get Your Digital Pass</title>
-  </head>
-  <body style="font-family: Arial; text-align: center; margin-top: 100px;">
-    <h1>Get Your N-Word Pass</h1>
-    <p>Choose between a one-time pass or a monthly subscription.</p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Get Your Digital Pass</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f3f4f6; display:flex; align-items:center; justify-content:center; height:100vh; }
+    .card { background:#fff; padding:28px; border-radius:12px; width:340px; box-shadow:0 8px 30px rgba(0,0,0,0.08); text-align:center; }
+    input { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd; }
+    .row { display:flex; gap:10px; }
+    button { width:100%; padding:10px; margin-top:10px; border-radius:8px; border:none; background:#4f46e5; color:#fff; font-weight:600; cursor:pointer; }
+    .secondary { background:#10b981; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Get Your N-Word Pass</h2>
+    <p>Choose a one-time pass or a monthly subscription. Your pass will be emailed to you.</p>
 
-    <input type="text" id="name" placeholder="Your name" style="padding:10px; width:200px;" /><br><br>
-    <input type="email" id="email" placeholder="Your email" style="padding:10px; width:200px;" /><br><br>
+    <input id="name" type="text" placeholder="Your name" required />
+    <input id="email" type="email" placeholder="Your email" required />
 
-    <button onclick="checkout('one_time')" style="padding:10px 20px; margin-right:10px;">
-      Buy One-Time Pass
-    </button>
+    <div style="margin-top:10px;">
+      <button onclick="startCheckout('one_time')">Buy One-Time Pass</button>
+      <button onclick="startCheckout('subscription')" style="margin-top:8px;background:#06b6d4">Buy Monthly Pass</button>
+    </div>
 
-    <button onclick="checkout('subscription')" style="padding:10px 20px;">
-      Buy Monthly pass
-    </button>
+    <p id="msg" style="color:#d00; margin-top:12px; display:none;"></p>
+  </div>
 
-    <script>
-      async function checkout(type) {
-        const res = await fetch("/api/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type }),
+  <script>
+    async function startCheckout(type) {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const msg = document.getElementById('msg');
+      msg.style.display = 'none';
+
+      if (!name || !email) {
+        msg.textContent = 'Please enter name and email.';
+        msg.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, name, email })
         });
-
         const data = await res.json();
         if (data.url) {
-          window.location.href = data.url;
+          window.location.href = data.url; // redirect to Stripe Checkout
         } else {
-          alert("Something went wrong.");
+          msg.textContent = data.error || 'Failed to create checkout. Try again.';
+          msg.style.display = 'block';
         }
+      } catch (err) {
+        msg.textContent = 'Network error. Try again.';
+        msg.style.display = 'block';
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
