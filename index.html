@@ -1,88 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Get Your N-Word Pass</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f8fa;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      color: #222;
-    }
-    p {
-      color: #555;
-      max-width: 400px;
-      text-align: center;
-    }
-    input {
-      margin: 8px 0;
-      padding: 10px;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 16px;
-      margin: 5px;
-      border: none;
-      background: #0070f3;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0059c1;
-    }
-  </style>
-</head>
-<body>
-  <h1>Get Your N-Word Pass</h1>
-  <p>Choose a one-time pass or a monthly subscription. Your pass will be emailed to you.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Get Your Pass</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9f9f9;
+        text-align: center;
+        padding: 60px;
+      }
+      h1 {
+        color: #333;
+      }
+      input {
+        margin: 10px;
+        padding: 8px;
+        width: 250px;
+      }
+      button {
+        margin: 10px;
+        padding: 10px 20px;
+        border: none;
+        background: #0070f3;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0059c9;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Get Your N-Word Pass</h1>
+    <p>Choose a one-time pass or a monthly subscription. Your pass will be emailed to you.</p>
 
-  <input type="text" id="name" placeholder="Your name" required />
-  <input type="email" id="email" placeholder="Your email" required />
+    <input id="name" type="text" placeholder="Your name" required /><br />
+    <input id="email" type="email" placeholder="Your email" required /><br />
 
-  <div>
-    <button id="buy-onetime">Buy One-Time Pass</button>
-    <button id="buy-subscription">Buy Monthly Pass</button>
-  </div>
+    <button id="buy-once">Buy One-Time Pass</button>
+    <button id="buy-sub">Buy Monthly Pass</button>
 
-  <script>
-    async function handleCheckout(type) {
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
+    <script>
+      async function buyPass(type) {
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
 
-      if (!name || !email) {
-        alert("Please fill in your name and email first.");
-        return;
+        if (!email || !name) {
+          alert('Please enter your name and email');
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, name, email })
+          });
+
+          const data = await response.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            alert('Error creating checkout session');
+            console.error(data);
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Failed to connect to payment server.');
+        }
       }
 
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, type })
-      });
-
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url; // redirect to Stripe
-      } else {
-        alert('Error: ' + (data.error || 'Something went wrong.'));
-      }
-    }
-
-    document.querySelector('#buy-onetime').addEventListener('click', () => handleCheckout('onetime'));
-    document.querySelector('#buy-subscription').addEventListener('click', () => handleCheckout('subscription'));
-  </script>
-</body>
+      document.getElementById('buy-once').addEventListener('click', () => buyPass('one-time'));
+      document.getElementById('buy-sub').addEventListener('click', () => buyPass('subscription'));
+    </script>
+  </body>
 </html>
-<!-- redeploy -->
